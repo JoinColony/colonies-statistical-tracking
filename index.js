@@ -59,7 +59,21 @@ const getAllColonies = /* GraphQL */ `
       items {
         name
         colonyAddress: id
-
+        nativeToken {
+          tokenAddress: id
+          name
+          symbol
+        }
+        version
+        createdAt
+        extensions {
+          items {
+            id
+            version
+            hash
+            installedAt: createdAt
+          }
+        }
       }
     }
   }
