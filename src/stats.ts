@@ -12,7 +12,11 @@ const port = process.env.STATS_PORT;
 app.get('/', (_, res) => {
   res
     .type('text/plain')
-    .send(process.env.NODE_ENV !== 'production' ? 'Block Ingestor' : '');
+    .send(
+      process.env.NODE_ENV !== 'production'
+        ? 'Colonies Statistical Tracking'
+        : '',
+    );
 });
 
 /*
@@ -44,7 +48,7 @@ export const startStatsServer = async (): Promise<void> => {
   const lastBlockNumber = getLastBlockNumber();
 
   app.listen(port, async () => {
-    output('Block Ingestor started on chain', getChainId());
+    output('Colonies Statistical Tracking started on chain', getChainId());
     output(`Stats available at http://localhost:${port}/stats`);
     output(`Liveness check available at http://localhost:${port}/liveness`);
     output(`Last processed block number: ${lastBlockNumber}`);

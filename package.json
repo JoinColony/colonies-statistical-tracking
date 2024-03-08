@@ -1,7 +1,7 @@
 {
-  "name": "block-ingestor",
+  "name": "colonies-statistical-tracking",
   "version": "1.0.0",
-  "description": "Microservice that ingests ERC20 transactions for Colony Network Contracts",
+  "description": "Fork of the block ingestor that tracks created colonies for marketing, statistical and research purpouses",
   "main": "index.ts",
   "scripts": {
     "build": "rm -rf dist/* && npx tsc",
@@ -16,14 +16,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JoinColony/tx-ingestor.git"
+    "url": "git+https://github.com/JoinColony/colonies-statistical-tracking.git"
   },
   "author": "Raul Glogovetan <raul@glogovetan.com>",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/JoinColony/tx-ingestor/issues"
+    "url": "https://github.com/JoinColony/colonies-statistical-tracking/issues"
   },
-  "homepage": "https://github.com/JoinColony/tx-ingestor",
+  "homepage": "https://github.com/JoinColony/colonies-statistical-tracking",
   "dependencies": {
     "@colony/colony-js": "^7.0.3",
     "@colony/events": "^1.0.1",

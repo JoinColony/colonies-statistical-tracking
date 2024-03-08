@@ -1,3 +1,3 @@
-# Block Ingestor
+# Colonies Statistical Tracking
 
-Microservice that ingests ERC20 transactions for Colony Network Contracts
+Fork of the block ingestor that tracks created colonies for marketing, statistical and research purpouses
