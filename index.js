@@ -72,7 +72,22 @@ const getAllColonies = /* GraphQL */ `
   const statusSheet = spreadsheet.sheetsByIndex[1];
 
   try {
+    // knows about header row
+    const rows = await dataSheet.getRows();
 
+    const knownColonyNames = rows.map(row => row.get('Colony Name'));
+
+    console.log({ knownColonyNames })
+
+    const allColoniesInDBQuery = await graphqlRequest(getAllColonies);
+
+    const allColoniesInDB = allColoniesInDBQuery.data.listColonies.items.map(item => item.name);
+
+    console.log({ allColoniesInDB })
+
+    const coloniesToProcess = allColoniesInDB.filter(colonyName => !knownColonyNames.includes(colonyName));
+
+    console.log({ coloniesToProcess });
 
   } catch (error) {
     await statusSheet.loadCells('A1:A1');
