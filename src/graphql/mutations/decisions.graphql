@@ -1,7 +1,0 @@
-mutation UpdateColonyDecision($id: ID!, $showInDecisionsList: Boolean!) {
-  updateColonyDecision(
-    input: { id: $id, showInDecisionsList: $showInDecisionsList }
-  ) {
-    id
-  }
-}

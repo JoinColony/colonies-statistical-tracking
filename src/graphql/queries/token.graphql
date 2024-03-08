@@ -1,7 +1,0 @@
-query GetTokenFromEverywhere($input: TokenFromEverywhereArguments!) {
-  getTokenFromEverywhere(input: $input) {
-    items {
-      id
-    }
-  }
-}

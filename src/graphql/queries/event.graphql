@@ -1,5 +1,0 @@
-query GetContractEvent($id: ID!) {
-  getContractEvent(id: $id) {
-    id
-  }
-}
