@@ -17,9 +17,12 @@
   },
   "homepage": "https://github.com/JoinColony/colonies-statistical-tracking",
   "dependencies": {
-    "dotenv": "^16.3.1",
     "aws-amplify": "^4.3.43",
     "cross-fetch": "^4.0.0",
+    "dotenv": "^16.3.1",
+    "google-auth-library": "^9.7.0",
+    "google-spreadsheet": "^4.1.1",
+    "keccak256": "^1.0.6",
     "node-fetch": "^2.6.7"
   }
 }

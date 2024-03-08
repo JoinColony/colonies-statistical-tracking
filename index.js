@@ -1,19 +1,30 @@
 require('dotenv').config();
 const fetch = require('node-fetch');
+const { JWT } = require('google-auth-library');
+const { GoogleSpreadsheet } = require('google-spreadsheet');
+const keccak256 = require('keccak256');
 
 const DEFAULT_TIMEOUT = 300;
+const SCOPES = [
+  'https://www.googleapis.com/auth/spreadsheets',
+  'https://www.googleapis.com/auth/drive.file',
+];
 
-const delay = (ms = DEFAULT_TIMEOUT, verbose = false) =>
-  new Promise((resolve) =>
-    setTimeout(() => {
-      if (verbose) {
-        console.log(`Delaying execution by ${ms} milliseconds`);
-      }
-      resolve();
-    }, ms),
-  );
+const jwt = new JWT({
+  email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+  key: process.env.GOOGLE_PRIVATE_KEY,
+  scopes: SCOPES,
+});
 
-const graphqlRequest = async (queryOrMutation, variables, url, authKey) => {
+const spreadsheet = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, jwt);
+
+const ExtensionNameMapping = {
+  [keccak256('OneTxPayment').toString('hex')]: 'OneTxPayment',
+  [keccak256('VotingReputation').toString('hex')]: 'VotingReputation',
+};
+
+
+const graphqlRequest = async (queryOrMutation, variables, url = process.env.AWS_APPSYNC_ENDPOINT, authKey = process.env.AWS_APPSYNC_KEY) => {
   const options = {
     method: 'POST',
     headers: {
@@ -42,34 +53,35 @@ const graphqlRequest = async (queryOrMutation, variables, url, authKey) => {
   }
 };
 
-const tryFetchGraphqlQuery = async (
-  queryOrMutation,
-  variables,
-  maxRetries = 10,
-  blockTime = 5000,
-) => {
-  let currentTry = 0;
-  while (true) {
-    const { data } = await graphqlRequest(
-      queryOrMutation,
-      variables,
-      process.env.AWS_APPSYNC_ENDPOINT,
-      process.env.AWS_APPSYNC_KEY,
-    );
+const getAllColonies = /* GraphQL */ `
+  query GetAllColonies {
+    listColonies {
+      items {
+        name
+        colonyAddress: id
 
-    /*
-     * @NOTE That this limits to only fetching one operation at a time
-     */
-    if (data[Object.keys(data)[0]]) {
-      return data[Object.keys(data)[0]];
-    }
-
-    if (currentTry < maxRetries) {
-      await delay(blockTime);
-      currentTry += 1;
-    } else {
-      console.log(data);
-      throw new Error('Could not fetch graphql data in time');
+      }
     }
   }
-};
+`;
+
+(async () => {
+
+  await spreadsheet.loadInfo();
+  const dataSheet = spreadsheet.sheetsByIndex[0];
+  const statusSheet = spreadsheet.sheetsByIndex[1];
+
+  try {
+
+
+  } catch (error) {
+    await statusSheet.loadCells('A1:A1');
+    const firstCell = statusSheet.getCell(0, 0);
+    firstCell.value = `Error: ${error.message}`;
+    await statusSheet.saveUpdatedCells()
+  }
+
+
+
+
+})();
