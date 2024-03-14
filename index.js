@@ -23,6 +23,14 @@ const ExtensionNameMapping = {
   [keccak256('VotingReputation').toString('hex')]: 'VotingReputation',
 };
 
+const updateStatusSheet = async (statusSheet, message) => {
+  await statusSheet.loadCells('A1:A2');
+  const dateCell = statusSheet.getCell(0, 0);
+  const textCell = statusSheet.getCell(1, 0);
+  dateCell.value = new Date().toISOString();
+  textCell.value = message;
+  await statusSheet.saveUpdatedCells();
+};
 
 const graphqlRequest = async (queryOrMutation, variables, url = process.env.AWS_APPSYNC_ENDPOINT, authKey = process.env.AWS_APPSYNC_KEY) => {
   const options = {
@@ -119,11 +127,10 @@ const getAllColonies = /* GraphQL */ `
 
     await dataSheet.addRows(newSheetData);
 
+
+    await updateStatusSheet(statusSheet, `Successfully updated`);
   } catch (error) {
-    await statusSheet.loadCells('A1:A1');
-    const firstCell = statusSheet.getCell(0, 0);
-    firstCell.value = `Error: ${error.message}`;
-    await statusSheet.saveUpdatedCells()
+    await updateStatusSheet(statusSheet, `Error: ${error.message}`);
   }
 
 
