@@ -91,17 +91,27 @@ const getAllColonies = /* GraphQL */ `
 
     const knownColonyNames = rows.map(row => row.get('Colony Name'));
 
-    console.log({ knownColonyNames })
-
     const allColoniesInDBQuery = await graphqlRequest(getAllColonies);
 
     const allColoniesInDB = allColoniesInDBQuery.data.listColonies.items.map(item => item.name);
 
-    console.log({ allColoniesInDB })
-
     const coloniesToProcess = allColoniesInDB.filter(colonyName => !knownColonyNames.includes(colonyName));
 
-    console.log({ coloniesToProcess });
+    // !Careful with the heading title, as capitalization matters, even if not the first character!
+    const newSheetData = coloniesToProcess.map(colonyName => {
+      const colony = allColoniesInDBQuery.data.listColonies.items.find(item => item.name === colonyName);
+      return {
+        'Colony Name': colony.name,
+        'Colony Address': colony.colonyAddress,
+        'Native Token Name': colony.nativeToken.name,
+        'Native Token Symbol': colony.nativeToken.symbol,
+        'Native Token Address': colony.nativeToken.tokenAddress,
+        'Colony Version': colony.version,
+        'Created at': colony.createdAt,
+      };
+    });
+
+    await dataSheet.addRows(newSheetData);
 
   } catch (error) {
     await statusSheet.loadCells('A1:A1');
