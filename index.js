@@ -19,8 +19,8 @@ const jwt = new JWT({
 const spreadsheet = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, jwt);
 
 const ExtensionNameMapping = {
-  [keccak256('OneTxPayment').toString('hex')]: 'OneTxPayment',
-  [keccak256('VotingReputation').toString('hex')]: 'VotingReputation',
+  OneTxPayment: `0x${keccak256('OneTxPayment').toString('hex')}`,
+  VotingReputation: `0x${keccak256('VotingReputation').toString('hex')}`,
 };
 
 const updateStatusSheet = async (statusSheet, message) => {
@@ -76,7 +76,7 @@ const getAllColonies = /* GraphQL */ `
         createdAt
         extensions {
           items {
-            id
+            extensionAddress: id
             version
             hash
             installedAt: createdAt
@@ -112,7 +112,10 @@ const getAllColonies = /* GraphQL */ `
     // !Careful with the heading title, as capitalization matters, even if not the first character!
     const newSheetData = coloniesToProcess.map(colonyName => {
       const colony = allColoniesInDBQuery.data.listColonies.items.find(item => item.name === colonyName);
-      return {
+      const oneTxPaymentExtension = colony.extensions.items.find(extension => extension.hash === ExtensionNameMapping.OneTxPayment);
+      const votinReputationExtension = colony.extensions.items.find(extension => extension.hash === ExtensionNameMapping.VotingReputation);
+
+      let rowUpdate = {
         'Colony Name': colony.name,
         'Colony Address': colony.colonyAddress,
         'Colony Display Name': colony.metadata.displayName || 'N/A',
@@ -123,10 +126,28 @@ const getAllColonies = /* GraphQL */ `
         'Colony Version': colony.version,
         'Created at': colony.createdAt,
       };
+
+      if (oneTxPaymentExtension) {
+        rowUpdate = {
+          ...rowUpdate,
+          'OneTx Address': oneTxPaymentExtension.extensionAddress,
+          'OneTx Version': oneTxPaymentExtension.version,
+        };
+      }
+
+      if (votinReputationExtension) {
+        rowUpdate = {
+          ...rowUpdate,
+          'VotingRep Address': votinReputationExtension.extensionAddress,
+          'VotingRep Version': votinReputationExtension.version,
+          'VotingRep InstalledAt': votinReputationExtension.installedAt,
+        };
+      }
+
+      return rowUpdate;
     });
 
     await dataSheet.addRows(newSheetData);
-
 
     await updateStatusSheet(statusSheet, `Successfully updated`);
   } catch (error) {
