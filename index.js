@@ -74,6 +74,10 @@ const getAllColonies = /* GraphQL */ `
             installedAt: createdAt
           }
         }
+        metadata {
+          description
+          displayName
+        }
       }
     }
   }
@@ -103,6 +107,8 @@ const getAllColonies = /* GraphQL */ `
       return {
         'Colony Name': colony.name,
         'Colony Address': colony.colonyAddress,
+        'Colony Display Name': colony.metadata.displayName || 'N/A',
+        'Colony Description': colony.metadata.description,
         'Native Token Name': colony.nativeToken.name,
         'Native Token Symbol': colony.nativeToken.symbol,
         'Native Token Address': colony.nativeToken.tokenAddress,
