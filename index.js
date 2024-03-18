@@ -11,7 +11,8 @@ const SCOPES = [
 
 const jwt = new JWT({
   email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-  key: process.env.GOOGLE_PRIVATE_KEY,
+  // Splitting needed due to the nature of the private key's format
+  key: process.env.GOOGLE_PRIVATE_KEY.split(String.raw`\n`).join('\n'),
   scopes: SCOPES,
 });
 
