@@ -4,7 +4,6 @@ const { JWT } = require('google-auth-library');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const keccak256 = require('keccak256');
 
-const DEFAULT_TIMEOUT = 300;
 const SCOPES = [
   'https://www.googleapis.com/auth/spreadsheets',
   'https://www.googleapis.com/auth/drive.file',
@@ -62,8 +61,8 @@ const graphqlRequest = async (queryOrMutation, variables, url = process.env.AWS_
 };
 
 const getAllColonies = /* GraphQL */ `
-  query GetAllColonies {
-    listColonies {
+  query GetAllColonies($nextToken: String) {
+    listColonies(limit: 20, nextToken: $nextToken) {
       items {
         name
         colonyAddress: id
@@ -87,6 +86,7 @@ const getAllColonies = /* GraphQL */ `
           displayName
         }
       }
+      nextToken
     }
   }
 `;
@@ -103,15 +103,35 @@ const getAllColonies = /* GraphQL */ `
 
     const knownColonyNames = rows.map(row => row.get('Colony Name'));
 
-    const allColoniesInDBQuery = await graphqlRequest(getAllColonies);
+    let allColoniesInDB = [];
+    let nextToken = null;
 
-    const allColoniesInDB = allColoniesInDBQuery.data.listColonies.items.map(item => item.name);
+    do {
+      let queryInput = {};
+      if (nextToken) {
+        queryInput = { nextToken };
+      }
+      const allColoniesInDBQuery = await graphqlRequest(getAllColonies, queryInput);
 
-    const coloniesToProcess = allColoniesInDB.filter(colonyName => !knownColonyNames.includes(colonyName));
+      const colonies = allColoniesInDBQuery.data.listColonies.items;
+
+      if (colonies.length === 0) {
+        break;
+      }
+
+
+      allColoniesInDB.push(...colonies);
+      const coloniesNames = colonies.map(colony => colony.name);
+
+      nextToken = allColoniesInDBQuery.data.listColonies.nextToken;
+    } while (nextToken);
+
+    const allColoniesInDBNames = allColoniesInDB.map(colony => colony.name);
+    const coloniesToProcess = allColoniesInDBNames.filter(colonyName => !knownColonyNames.includes(colonyName));
 
     // !Careful with the heading title, as capitalization matters, even if not the first character!
     const newSheetData = coloniesToProcess.map(colonyName => {
-      const colony = allColoniesInDBQuery.data.listColonies.items.find(item => item.name === colonyName);
+      const colony = allColoniesInDB.find(item => item.name === colonyName);
       const oneTxPaymentExtension = colony.extensions.items.find(extension => extension.hash === ExtensionNameMapping.OneTxPayment);
       const votinReputationExtension = colony.extensions.items.find(extension => extension.hash === ExtensionNameMapping.VotingReputation);
 
@@ -149,7 +169,7 @@ const getAllColonies = /* GraphQL */ `
 
     await dataSheet.addRows(newSheetData);
 
-    await updateStatusSheet(statusSheet, `Successfully updated`);
+    await updateStatusSheet(statusSheet, coloniesToProcess.length > 0 ? `Successfully added ${coloniesToProcess.length} colonies` : 'Successfully updated');
   } catch (error) {
     await updateStatusSheet(statusSheet, `Error: ${error.message}`);
   }
